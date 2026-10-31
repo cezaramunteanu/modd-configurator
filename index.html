@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MODD — Configurator cercei</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="image" href="imagini/umbra.webp"><link rel="preload" as="image" href="imagini/cheite/stang.webp"><link rel="preload" as="image" href="imagini/cheite/drept.webp"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f8f5ef;--ink:#24221f;--muted:#77736d;--line:#ded9d1;--card:#fffdf9;--shadow:0 10px 30px rgba(40,35,25,.06);--ear-h:min(68vh,680px)}
@@ -28,8 +28,8 @@
 <section class="layout">
 <div class="side left"><h2>CERCEL STÂNG</h2><div class="controls" id="left-controls"></div></div>
 <div class="preview">
-  <div class="ear" id="left-ear"><img src="imagini/umbra.png" alt=""><img src="imagini/cheite/stang.png" alt=""></div>
-  <div class="ear" id="right-ear"><img src="imagini/umbra.png" alt=""><img src="imagini/cheite/drept.png" alt=""></div>
+  <div class="ear" id="left-ear"><img src="imagini/umbra.webp" alt=""><img src="imagini/cheite/stang.webp" alt=""></div>
+  <div class="ear" id="right-ear"><img src="imagini/umbra.webp" alt=""><img src="imagini/cheite/drept.webp" alt=""></div>
 </div>
 <div class="side right"><h2>CERCEL DREPT</h2><div class="controls" id="right-controls"></div></div>
 </section>
@@ -40,10 +40,10 @@
 const elements=[['element1-baza','Bază'],['element2-picatura','Picătură'],['element3-sfera-alungita','Sferă alungită'],['element4-umbrela','Umbrelă'],['element5-sfera-aplatizata','Sferă aplatizată']];
 const colors=[['0-default','Alege culoarea','#d8d5cf'],['army-green','Army Green','#67692E'],['charcoal-black','Charcoal Black','#1A1A1A'],['cotton-white','Cotton White','#FFFFFF'],['lemon-cream','Lemon Cream','#F4F090'],['mauve','Mauve','#E9C9E6'],['mystic-brown','Mystic Brown','#623532'],['pastel-blue','Pastel Blue','#7F9CD6'],['pastel-green','Electric Green','#B8E667'],['purple','Purple','#930575']];
 const state={left:Array(5).fill('0-default'),right:Array(5).fill('0-default')};
-function path(i,c){return `imagini/elemente/${elements[i][0]}/${c}.png`}
+function path(i,c){return `imagini/elemente/${elements[i][0]}/${c}.webp`}
 function closePickers(except){document.querySelectorAll('.color-picker.open').forEach(p=>{if(p!==except){p.classList.remove('open');p.querySelector('.color-trigger').setAttribute('aria-expanded','false')}})}
 function setPicker(picker,side,i,color,img){
-  state[side][i]=color;img.src=path(i,color);
+  state[side][i]=color;const next=path(i,color); if(img.getAttribute('src')!==next) img.src=next;
   const data=colors.find(c=>c[0]===color)||colors[0];
   picker.querySelector('.color-trigger .color-dot').style.setProperty('--swatch',data[2]);
   picker.querySelector('.color-trigger .color-name').textContent=data[1];
@@ -53,7 +53,7 @@ function setPicker(picker,side,i,color,img){
 function build(side){
  const controls=document.getElementById(side+'-controls'),ear=document.getElementById(side+'-ear');
  elements.forEach((e,i)=>{
-  const img=document.createElement('img');img.src=path(i,'0-default');img.dataset.layer=i;ear.appendChild(img);
+  const img=document.createElement('img');img.decoding='async';img.loading='eager';img.fetchPriority='high';img.src=path(i,'0-default');img.dataset.layer=i;ear.appendChild(img);
   const f=document.createElement('div');f.className='field';
   const label=document.createElement('label');label.textContent=e[1];f.appendChild(label);
   const picker=document.createElement('div');picker.className='color-picker';
@@ -72,10 +72,30 @@ function build(side){
  });
 }
 build('left');build('right');
+// Preincarcare discreta dupa afisarea initiala: schimbarea culorilor devine rapida.
+const warmed=new Map();
+function warm(src){
+ if(warmed.has(src))return warmed.get(src);
+ const p=new Promise(resolve=>{const im=new Image();im.decoding='async';im.onload=()=>resolve(true);im.onerror=()=>resolve(false);im.src=src;});
+ warmed.set(src,p);return p;
+}
+window.addEventListener('load',()=>{
+ const queue=[];
+ elements.forEach((e,i)=>colors.slice(1).forEach(c=>queue.push(path(i,c[0]))));
+ let index=0;
+ async function worker(){while(index<queue.length){const url=queue[index++];await warm(url);}}
+ setTimeout(()=>{worker();worker();},1100);
+},{once:true});
 document.addEventListener('click',ev=>{if(!ev.target.closest('.color-picker'))closePickers()});
 document.getElementById('reset').onclick=()=>{['left','right'].forEach(side=>{document.querySelectorAll('#'+side+'-controls .color-picker').forEach((picker,i)=>{const img=document.querySelector('#'+side+'-ear img[data-layer="'+i+'"]');setPicker(picker,side,i,'0-default',img)})})};
-function load(src){return new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=src})}
-async function drawEar(ctx,x,y,w,h,side){const shadow=await load('imagini/umbra.png');ctx.drawImage(shadow,x,y,w,h);const clasp=await load(`imagini/cheite/${side==='left'?'stang':'drept'}.png`);ctx.drawImage(clasp,x,y,w,h);for(let i=0;i<5;i++){const im=await load(path(i,state[side][i]));ctx.drawImage(im,x,y,w,h)}}
+const imageCache=new Map();
+function load(src){
+ if(imageCache.has(src))return imageCache.get(src);
+ const promise=new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=src});
+ imageCache.set(src,promise);return promise;
+}
+async function drawEar(ctx,x,y,w,h,side){const sources=['imagini/umbra.webp',`imagini/cheite/${side==='left'?'stang':'drept'}.webp`,...state[side].map((c,i)=>path(i,c))];
+ const images=await Promise.all(sources.map(load));images.forEach(im=>ctx.drawImage(im,x,y,w,h));}
 document.getElementById('download').onclick=async()=>{
   const btn=document.getElementById('download'), original=btn.textContent;
   btn.disabled=true; btn.textContent='Se pregătește imaginea…';
