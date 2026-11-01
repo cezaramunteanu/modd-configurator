@@ -233,7 +233,7 @@ document.getElementById('download').onclick=async()=>{
     x.fillText('Combinația ta',W/2,126);
 
     // Cerceii sunt redați din straturile reale, în culorile configurate.
-    const eh=1360,ew=eh*1738/5013,gap=20,top=190;
+    const eh=1360,ew=eh*1738/5013,gap=10,top=190;
     await drawEar(x,W/2-gap/2-ew,top,ew,eh,'left');
     await drawEar(x,W/2+gap/2,top,ew,eh,'right');
 
@@ -267,12 +267,12 @@ document.getElementById('download').onclick=async()=>{
     x.font='400 27px Outfit, Arial, sans-serif';x.fillStyle='#514b43';
     x.fillText('www.modd-jewelry.ro',W/2,1750);
     const blob=await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('Imaginea nu a putut fi creată.')),'image/png'));
-    const file=new File([blob],'MODD-combinatia-ta-varianta-D.png',{type:'image/png'});
+    const file=new File([blob],'MODD-combinatia-ta-varianta-F.png',{type:'image/png'});
     if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
       try{await navigator.share({files:[file],title:'MODD — combinația mea',text:'Combinația mea MODD'});return;}catch(e){if(e.name==='AbortError')return;}
     }
     const url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download='MODD-combinatia-ta-varianta-D.png';document.body.appendChild(a);a.click();a.remove();
+    a.href=url;a.download='MODD-combinatia-ta-varianta-F.png';document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1500);
   }catch(e){
     console.error(e);alert(location.protocol==='file:' ? 'Browserul blochează exportul PNG când pagina este deschisă direct din fișierele calculatorului. Publică proiectul pe GitHub Pages sau rulează-l pe un server local pentru a salva/distribui imaginea.' : 'Nu am putut genera imaginea. Verifică dacă toate imaginile se încarcă și încearcă din nou.');
