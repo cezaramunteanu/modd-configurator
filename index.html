@@ -49,16 +49,51 @@
  .ear img.selection-overlay.active{display:block}
 }
 @media(max-width:800px) and (max-height:630px){.brand img{max-height:31px}.welcome{font-size:10px;margin-bottom:3px}.page{padding-top:3px;padding-bottom:calc(151px + env(safe-area-inset-bottom))}.mobile-palette{min-height:94px;padding:7px 10px}.mobile-swatch{width:clamp(20px,6.5vw,25px);height:clamp(20px,6.5vw,25px)}.mobile-swatches{gap:clamp(2px,1vw,6px)}}
+
+/* Desktop MODD Studio: cercei mari, palete laterale contextuale */
+@media(min-width:801px){
+ :root{--ear-h:min(78vh,850px)}
+ .page{max-width:1660px;padding:10px 24px 18px}
+ .brand img{max-height:58px;margin-bottom:4px}
+ .welcome{margin-bottom:8px}
+ .layout{grid-template-columns:minmax(205px,300px) minmax(0,1fr) minmax(205px,300px);gap:12px;align-items:center}
+ .side{align-self:center;min-width:0}
+ .side h2{display:none}
+ .side .controls{display:none}
+ .preview{height:var(--ear-h);padding-top:0;gap:12px;align-items:center}
+ .ear{cursor:pointer}
+ .ear img.selection-overlay{display:none;z-index:20;pointer-events:none}
+ .ear img.selection-overlay.active{display:block}
+ .desktop-panel{min-height:250px;border:1px solid #e8e0d7;border-radius:24px;background:#fffdf9;box-shadow:0 14px 35px rgba(40,35,25,.07);padding:20px}
+ .desktop-panel.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;color:#77736d}
+ .desktop-panel.empty .panel-heading{font:600 15px Quicksand,sans-serif;color:#292724}
+ .panel-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+ .panel-heading{font:600 16px Quicksand,sans-serif}
+ .panel-close{border:0;background:none;font-size:24px;cursor:pointer;color:#5e564d}
+ .panel-piece{display:flex;align-items:center;gap:14px;margin:12px 0 16px;min-height:82px}
+ .panel-thumb{width:76px;height:85px;object-fit:contain}
+ .panel-name{font:600 15px Quicksand,sans-serif}
+ .panel-sub{font-size:13px;color:#77736d;margin-top:4px}
+ .panel-rule{height:1px;background:#e9e4dd;margin:8px 0 16px}
+ .panel-instruction{font:500 14px Quicksand,sans-serif;margin:0 0 16px}
+ .desktop-swatches{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:15px 8px;justify-items:center}
+ .desktop-swatch{width:clamp(28px,3.2vw,42px);aspect-ratio:1;border-radius:50%;border:1px solid #c9c1b8;background:var(--swatch);cursor:pointer;position:relative}
+ .desktop-swatch[aria-pressed=true]{outline:2px solid #6c5842;outline-offset:3px}
+ .desktop-swatch.default{background:conic-gradient(#e8e4dc 0 25%,#fff 0 50%,#e8e4dc 0 75%,#fff 0)}
+ .actions{display:flex;justify-content:center;gap:12px;margin-top:8px}
+ .wear-message{margin-top:10px}
+}
+@media(min-width:801px) and (max-height:740px){:root{--ear-h:min(73vh,720px)}.desktop-panel{padding:15px}}
 </style></head>
 <body><main class="page">
 <header class="brand"><img src="imagini/logo.png" alt="MODD"><p class="welcome">Hello! Alege combinația de culori dorită și poartă-i în ce modd vrei!</p></header>
 <section class="layout">
-<div class="side left"><h2>CERCEL STÂNG</h2><div class="controls" id="left-controls"></div></div>
+<div class="side left"><h2>CERCEL STÂNG</h2><div class="controls" id="left-controls"></div><div class="desktop-panel empty" id="left-panel"></div></div>
 <div class="preview">
   <div class="ear" id="left-ear"><img src="imagini/umbra.webp?v=20261101-v6" alt=""><img src="imagini/cheite/stang.webp" alt=""></div>
   <div class="ear" id="right-ear"><img src="imagini/umbra.webp?v=20261101-v6" alt=""><img src="imagini/cheite/drept.webp" alt=""></div>
 </div>
-<div class="side right"><h2>CERCEL DREPT</h2><div class="controls" id="right-controls"></div></div>
+<div class="side right"><h2>CERCEL DREPT</h2><div class="controls" id="right-controls"></div><div class="desktop-panel empty" id="right-panel"></div></div>
 </section>
 <div class="mobile-palette" id="mobile-palette" aria-label="Paletă culori"><div class="palette-title" id="mobile-title">Atinge o piesă a cercelului</div><div class="mobile-swatches" id="mobile-swatches"></div><div class="palette-hint" id="mobile-hint">Alege direct piesa pe care vrei să o colorezi</div></div>
 <div class="actions"><button class="reset" id="reset">Resetează ambii cercei</button><button class="download" id="download">Salvează / distribuie imaginea</button></div><section class="wear-message"><h3>WEAR IT YOUR WAY</h3><p>Joacă-te cu elementele și creează look-uri care te reprezintă.</p></section>
@@ -210,6 +245,91 @@ document.addEventListener('click',event=>{
 });
 renderMobilePalette();
 
+// Desktop: click direct pe pixelii piesei, paleta în lateralul cercelului.
+const desktopSelection={left:null,right:null};
+function desktopActive(){return matchMedia('(min-width:801px)').matches;}
+function refreshDesktopPanel(side){
+ const panel=document.getElementById(side+'-panel');
+ const i=desktopSelection[side];
+ panel.replaceChildren();
+ if(i===null){
+  panel.className='desktop-panel empty';
+  const heading=document.createElement('div');heading.className='panel-heading';heading.textContent=side==='left'?'Cercel stâng':'Cercel drept';
+  const hint=document.createElement('div');hint.textContent='Apasă pe o piesă a cercelului pentru a-i alege culoarea.';
+  panel.append(heading,hint);return;
+ }
+ panel.className='desktop-panel';
+ const top=document.createElement('div');top.className='panel-top';
+ const heading=document.createElement('span');heading.className='panel-heading';heading.textContent='Piesa selectată';
+ const close=document.createElement('button');close.type='button';close.className='panel-close';close.textContent='×';close.setAttribute('aria-label','Închide selecția');
+ close.addEventListener('click',()=>{desktopSelection[side]=null;updateDesktopOverlay(side);refreshDesktopPanel(side)});
+ top.append(heading,close);
+ const piece=document.createElement('div');piece.className='panel-piece';
+ const thumb=document.createElement('img');thumb.className='panel-thumb';thumb.alt='Piesa selectată în culoarea aleasă';
+ const desc=document.createElement('div');
+ const name=document.createElement('div');name.className='panel-name';name.textContent=elements[i][1];
+ const sub=document.createElement('div');sub.className='panel-sub';sub.textContent='Cercel '+(side==='left'?'stâng':'drept');
+ desc.append(name,sub);piece.append(thumb,desc);
+ const rule=document.createElement('div');rule.className='panel-rule';
+ const instruction=document.createElement('p');instruction.className='panel-instruction';instruction.textContent='Alege o culoare';
+ const swatches=document.createElement('div');swatches.className='desktop-swatches';
+ colors.forEach(c=>{
+  const b=document.createElement('button');b.type='button';b.className='desktop-swatch'+(c[0]==='0-default'?' default':'');
+  b.style.setProperty('--swatch',c[2]);b.title=c[1];b.setAttribute('aria-label',c[1]);b.setAttribute('aria-pressed',String(state[side][i]===c[0]));
+  b.addEventListener('click',event=>{
+   event.stopPropagation();
+   const picker=document.querySelectorAll('#'+side+'-controls .color-picker')[i];
+   const img=document.querySelector('#'+side+'-ear img[data-layer="'+i+'"]');
+   setPicker(picker,side,i,c[0],img);
+   refreshDesktopPanel(side); // Selecția rămâne activă după fiecare culoare.
+  });swatches.appendChild(b);
+ });
+ panel.append(top,piece,rule,instruction,swatches);
+ // Miniatura folosește imaginea reală a piesei, decupată după transparență.
+ load(path(i,state[side][i])).then(im=>{
+  if(desktopSelection[side]!==i)return;
+  const cv=document.createElement('canvas');cv.width=180;cv.height=520;
+  const cx=cv.getContext('2d',{willReadFrequently:true});cx.drawImage(im,0,0,180,520);
+  const a=cx.getImageData(0,0,180,520).data;
+  let minX=180,minY=520,maxX=-1,maxY=-1;
+  for(let y=0;y<520;y++)for(let x=0;x<180;x++)if(a[(y*180+x)*4+3]>20){
+   minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);
+  }
+  if(maxX<0)return;
+  const margin=8;
+  const out=document.createElement('canvas');out.width=maxX-minX+1+margin*2;out.height=maxY-minY+1+margin*2;
+  out.getContext('2d').drawImage(im,minX/180*im.width,minY/520*im.height,(maxX-minX+1)/180*im.width,(maxY-minY+1)/520*im.height,margin,margin,out.width-margin*2,out.height-margin*2);
+  if(thumb.isConnected)thumb.src=out.toDataURL('image/png');
+ }).catch(()=>{});
+}
+function updateDesktopOverlay(side){
+ const i=desktopSelection[side],overlay=overlays[side];
+ if(i===null){overlay.classList.remove('active');return;}
+ overlay.src='imagini/contururi/contur-'+outlineNames[i]+'.png?v=5';
+ overlay.classList.add('active');
+}
+['left','right'].forEach(side=>{
+ document.getElementById(side+'-ear').addEventListener('click',ev=>{
+  if(!desktopActive())return;
+  const i=pickLayer(ev.currentTarget,ev);
+  desktopSelection[side]=i;
+  updateDesktopOverlay(side);refreshDesktopPanel(side);
+ });
+ refreshDesktopPanel(side);
+});
+document.addEventListener('click',ev=>{
+ if(!desktopActive()||ev.target.closest('.ear,.desktop-panel,.actions'))return;
+ ['left','right'].forEach(side=>{if(desktopSelection[side]!==null){desktopSelection[side]=null;updateDesktopOverlay(side);refreshDesktopPanel(side)}});
+});
+document.getElementById('reset').addEventListener('click',()=>{
+ ['left','right'].forEach(side=>{desktopSelection[side]=null;updateDesktopOverlay(side);refreshDesktopPanel(side)});
+});
+function updateDownloadLabel(){
+ document.getElementById('download').textContent=desktopActive()?'Salvează imaginea':'Salvează / distribuie imaginea';
+}
+updateDownloadLabel();
+window.addEventListener('resize',updateDownloadLabel);
+
 const imageCache=new Map();
 function load(src){
  if(imageCache.has(src))return imageCache.get(src);
@@ -268,7 +388,7 @@ document.getElementById('download').onclick=async()=>{
     x.fillText('www.modd-jewelry.ro',W/2,1750);
     const blob=await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('Imaginea nu a putut fi creată.')),'image/png'));
     const file=new File([blob],'MODD-combinatia-ta-varianta-L.png',{type:'image/png'});
-    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+    if(!desktopActive() && navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
       try{await navigator.share({files:[file],title:'MODD — combinația mea',text:'Combinația mea MODD'});return;}catch(e){if(e.name==='AbortError')return;}
     }
     const url=URL.createObjectURL(blob),a=document.createElement('a');
