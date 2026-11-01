@@ -22,6 +22,31 @@
 .color-option:hover,.color-option:focus-visible{background:#f0eae1;outline:none}
 .color-option[aria-selected="true"]{background:#f3eee6;font-weight:500}
 @media(max-width:800px){.color-trigger{font-size:12px;padding:9px 7px;gap:6px;border-radius:15px}.color-option{font-size:12px;padding:9px 6px;gap:7px}.color-dot{width:11px;height:11px;flex-basis:11px}.color-menu{min-width:145px}.side.right .color-menu{right:0;left:auto}}
+
+/* MODD mobile: atingere directă + paletă fixă */
+.mobile-palette{display:none}
+@media(max-width:800px){
+ html,body{height:100%;overflow:hidden}
+ .page{height:100dvh;min-height:0;padding:8px 10px calc(165px + env(safe-area-inset-bottom));display:flex;flex-direction:column;overflow:hidden}
+ .brand{flex:0 0 auto}.brand img{max-width:112px;max-height:43px;margin-bottom:2px}.welcome{font-size:11px;line-height:1.25;margin:0 auto 6px;padding:0 6px}
+ .layout{display:flex;flex:1 1 auto;min-height:0;justify-content:center;align-items:stretch;gap:0}
+ .preview{display:flex;flex:1 1 auto;min-height:0;height:100%;width:100%;justify-content:center;align-items:center;gap:8px;padding:0}
+ .ear{height:100%;width:auto;max-width:calc((100vw - 38px)/2);aspect-ratio:1738/5013;flex:0 1 auto;position:relative;cursor:pointer;touch-action:manipulation}
+ .ear img{pointer-events:none}
+ .side{display:none}.wear-message,.note{display:none}
+ .actions{position:fixed;z-index:60;bottom:calc(9px + env(safe-area-inset-bottom));left:10px;right:10px;display:flex;justify-content:center;gap:8px;margin:0}
+ .actions button{font-size:11px;padding:10px 12px;white-space:nowrap}.actions .reset{background:#eee9e0;color:#292724}.actions .download{background:#292724;color:#fff}
+ .mobile-palette{display:flex;flex-direction:column;justify-content:center;gap:8px;position:fixed;z-index:50;left:0;right:0;bottom:calc(51px + env(safe-area-inset-bottom));min-height:104px;padding:11px 12px 9px;background:#fffdf9;border-top:1px solid var(--line);box-shadow:0 -7px 25px rgba(40,35,25,.07)}
+ .mobile-palette .palette-title{font:600 12px Quicksand,sans-serif;text-align:center;min-height:18px}
+ .mobile-palette .palette-hint{font-size:11px;color:var(--muted);text-align:center}
+ .mobile-swatches{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 9px}
+ .mobile-swatch{width:29px;height:29px;border-radius:50%;background:var(--swatch);border:1px solid #bcb6ae;cursor:pointer;position:relative;padding:0;flex:0 0 29px}
+ .mobile-swatch[aria-pressed=true]{outline:2px solid #292724;outline-offset:3px}
+ .mobile-swatch.default{background:conic-gradient(#e8e4dc 0 25%,#fff 0 50%,#e8e4dc 0 75%,#fff 0)}
+ .mobile-swatch:focus-visible{outline:2px solid #292724;outline-offset:3px}
+ .ear.selected-ear:after{content:'';position:absolute;inset:0;border-radius:15px;pointer-events:none;border:1px solid rgba(148,120,76,.22)}
+}
+@media(max-width:800px) and (max-height:630px){.brand img{max-height:31px}.welcome{font-size:10px;margin-bottom:3px}.page{padding-top:3px;padding-bottom:calc(151px + env(safe-area-inset-bottom))}.mobile-palette{min-height:94px;padding:7px 10px}.mobile-swatch{width:25px;height:25px;flex-basis:25px}.mobile-swatches{gap:7px}}
 </style></head>
 <body><main class="page">
 <header class="brand"><img src="imagini/logo.png" alt="MODD"><p class="welcome">Hello! Alege combinația de culori dorită și poartă-i în ce modd vrei!</p></header>
@@ -33,6 +58,7 @@
 </div>
 <div class="side right"><h2>CERCEL DREPT</h2><div class="controls" id="right-controls"></div></div>
 </section>
+<div class="mobile-palette" id="mobile-palette" aria-label="Paletă culori"><div class="palette-title" id="mobile-title">Atinge o piesă a cercelului</div><div class="mobile-swatches" id="mobile-swatches"></div><div class="palette-hint" id="mobile-hint">Alege direct piesa pe care vrei să o colorezi</div></div>
 <div class="actions"><button class="reset" id="reset">Resetează ambii cercei</button><button class="download" id="download">Salvează / distribuie imaginea</button></div><section class="wear-message"><h3>WEAR IT YOUR WAY</h3><p>Joacă-te cu elementele și creează look-uri care te reprezintă.</p></section>
 
 </main>
@@ -87,7 +113,72 @@ window.addEventListener('load',()=>{
  setTimeout(()=>{worker();worker();},1100);
 },{once:true});
 document.addEventListener('click',ev=>{if(!ev.target.closest('.color-picker'))closePickers()});
-document.getElementById('reset').onclick=()=>{['left','right'].forEach(side=>{document.querySelectorAll('#'+side+'-controls .color-picker').forEach((picker,i)=>{const img=document.querySelector('#'+side+'-ear img[data-layer="'+i+'"]');setPicker(picker,side,i,'0-default',img)})})};
+document.getElementById('reset').onclick=()=>{['left','right'].forEach(side=>{document.querySelectorAll('#'+side+'-controls .color-picker').forEach((picker,i)=>{const img=document.querySelector('#'+side+'-ear img[data-layer="'+i+'"]');setPicker(picker,side,i,'0-default',img)})});renderMobilePalette();};
+
+// Interfața mobilă folosește aceleași imagini, culori și stare ca desktopul.
+const mobileTitle=document.getElementById('mobile-title');
+const mobileHint=document.getElementById('mobile-hint');
+const mobileSwatches=document.getElementById('mobile-swatches');
+let mobileSelection=null;
+const hitCanvases=new WeakMap();
+function getAlphaAt(img,rx,ry){
+ if(!img.complete||!img.naturalWidth)return 0;
+ try{
+  let cached=hitCanvases.get(img);
+  if(!cached||cached.src!==img.currentSrc){
+   const canvas=document.createElement('canvas');canvas.width=180;canvas.height=520;
+   const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,180,520);
+   cached={src:img.currentSrc,ctx};hitCanvases.set(img,cached);
+  }
+  const x=Math.max(0,Math.min(179,Math.floor(rx*180)));
+  const y=Math.max(0,Math.min(519,Math.floor(ry*520)));
+  return cached.ctx.getImageData(x,y,1,1).data[3];
+ }catch(e){return 0;}
+}
+function pickLayer(ear,event){
+ const rect=ear.getBoundingClientRect();
+ const rx=(event.clientX-rect.left)/rect.width,ry=(event.clientY-rect.top)/rect.height;
+ if(rx<0||rx>1||ry<0||ry>1)return null;
+ const imgs=[...ear.querySelectorAll('img[data-layer]')];
+ // Căutăm pixelul vizibil al piesei, nu umbra sau cheița.
+ for(let i=imgs.length-1;i>=0;i--){if(getAlphaAt(imgs[i],rx,ry)>25)return i;}
+ // Mică toleranță pentru atingerile la marginea unei piese.
+ for(let i=imgs.length-1;i>=0;i--){
+  for(const dx of [-.025,0,.025])for(const dy of [-.012,0,.012]){
+   if(getAlphaAt(imgs[i],Math.max(0,Math.min(1,rx+dx)),Math.max(0,Math.min(1,ry+dy)))>50)return i;
+  }
+ }
+ return null;
+}
+function renderMobilePalette(){
+ mobileSwatches.replaceChildren();
+ if(!mobileSelection){mobileTitle.textContent='Atinge o piesă a cercelului';mobileHint.textContent='Alege direct piesa pe care vrei să o colorezi';return;}
+ const {side,i}=mobileSelection;
+ mobileTitle.textContent=elements[i][1]+' · cercel '+(side==='left'?'stâng':'drept');
+ mobileHint.textContent='Atinge o altă piesă pentru a continua';
+ colors.forEach(c=>{
+  const b=document.createElement('button');b.type='button';b.className='mobile-swatch'+(c[0]==='0-default'?' default':'');
+  b.style.setProperty('--swatch',c[2]);b.title=c[1];b.setAttribute('aria-label',c[1]);
+  b.setAttribute('aria-pressed',String(state[side][i]===c[0]));
+  b.addEventListener('click',()=>{
+   const picker=document.querySelectorAll('#'+side+'-controls .color-picker')[i];
+   const img=document.querySelector('#'+side+'-ear img[data-layer="'+i+'"]');
+   setPicker(picker,side,i,c[0],img);renderMobilePalette();
+  });mobileSwatches.appendChild(b);
+ });
+}
+['left','right'].forEach(side=>{
+ const ear=document.getElementById(side+'-ear');
+ ear.addEventListener('click',event=>{
+  if(!matchMedia('(max-width:800px)').matches)return;
+  const i=pickLayer(ear,event);if(i===null)return;
+  mobileSelection={side,i};
+  document.querySelectorAll('.ear').forEach(e=>e.classList.toggle('selected-ear',e===ear));
+  renderMobilePalette();
+ });
+});
+renderMobilePalette();
+
 const imageCache=new Map();
 function load(src){
  if(imageCache.has(src))return imageCache.get(src);
