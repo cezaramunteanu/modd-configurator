@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MODD — Configurator cercei</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<link rel="preload" as="image" href="imagini/umbra.webp"><link rel="preload" as="image" href="imagini/cheite/stang.webp"><link rel="preload" as="image" href="imagini/cheite/drept.webp"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="image" href="imagini/umbra.webp?v=20261101"><link rel="preload" as="image" href="imagini/cheite/stang.webp"><link rel="preload" as="image" href="imagini/cheite/drept.webp"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f8f5ef;--ink:#24221f;--muted:#77736d;--line:#ded9d1;--card:#fffdf9;--shadow:0 10px 30px rgba(40,35,25,.06);--ear-h:min(68vh,680px)}
@@ -55,8 +55,8 @@
 <section class="layout">
 <div class="side left"><h2>CERCEL STÂNG</h2><div class="controls" id="left-controls"></div></div>
 <div class="preview">
-  <div class="ear" id="left-ear"><img src="imagini/umbra.webp" alt=""><img src="imagini/cheite/stang.webp" alt=""></div>
-  <div class="ear" id="right-ear"><img src="imagini/umbra.webp" alt=""><img src="imagini/cheite/drept.webp" alt=""></div>
+  <div class="ear" id="left-ear"><img src="imagini/umbra.webp?v=20261101" alt=""><img src="imagini/cheite/stang.webp" alt=""></div>
+  <div class="ear" id="right-ear"><img src="imagini/umbra.webp?v=20261101" alt=""><img src="imagini/cheite/drept.webp" alt=""></div>
 </div>
 <div class="side right"><h2>CERCEL DREPT</h2><div class="controls" id="right-controls"></div></div>
 </section>
@@ -216,13 +216,13 @@ function load(src){
  const promise=new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=src});
  imageCache.set(src,promise);return promise;
 }
-async function drawEar(ctx,x,y,w,h,side){const sources=['imagini/umbra.webp',`imagini/cheite/${side==='left'?'stang':'drept'}.webp`,...state[side].map((c,i)=>path(i,c))];
+async function drawEar(ctx,x,y,w,h,side){const sources=['imagini/umbra.webp?v=20261101',`imagini/cheite/${side==='left'?'stang':'drept'}.webp`,...state[side].map((c,i)=>path(i,c))];
  const images=await Promise.all(sources.map(load));images.forEach(im=>ctx.drawImage(im,x,y,w,h));}
 document.getElementById('download').onclick=async()=>{
   const btn=document.getElementById('download'), original=btn.textContent;
   btn.disabled=true; btn.textContent='Se pregătește imaginea…';
   try{
-    if(document.fonts?.ready){await document.fonts.load('600 70px Quicksand');await document.fonts.load('400 43px Quicksand');await document.fonts.ready;}
+    if(document.fonts?.ready){await document.fonts.load('600 70px Quicksand');await document.fonts.load('400 37px Quicksand');await document.fonts.ready;}
     // Export vertical pentru telefon, fără contururile de selecție.
     const W=1080,H=1920,c=document.createElement('canvas');c.width=W;c.height=H;
     const x=c.getContext('2d');
@@ -233,16 +233,16 @@ document.getElementById('download').onclick=async()=>{
     x.fillText('Combinația ta',W/2,126);
 
     // Cerceii sunt redați din straturile reale, în culorile configurate.
-    const eh=1260,ew=eh*1738/5013,gap=18,top=250;
+    const eh=1300,ew=eh*1738/5013,gap=72,top=225;
     await drawEar(x,W/2-gap/2-ew,top,ew,eh,'left');
     await drawEar(x,W/2+gap/2,top,ew,eh,'right');
 
-    // Etichete mari, cu fiecare cuvânt pe rând separat, la mijlocul piesei.
+    // Etichete 85%, centrate pe mijlocul fiecărei piese, inclusiv pentru două rânduri.
     const pieceCenters=[(637+991)/2,(992+2567)/2,(2568+3618)/2,(3619+4145)/2,(4144+4672)/2];
     function drawColorNames(side){
       x.save();
       x.fillStyle='#3d3731';
-      x.font='400 43px Quicksand, Arial, sans-serif';
+      x.font='400 37px Quicksand, Arial, sans-serif';
       x.textBaseline='middle';
       x.textAlign='center';
       const tx=side==='left'?106:W-106;
@@ -250,7 +250,7 @@ document.getElementById('download').onclick=async()=>{
         const item=colors.find(v=>v[0]===id)||colors[0];
         const words=item[1].split(/\s+/);
         const cy=top+(pieceCenters[i]/5013)*eh;
-        const lineHeight=49;
+        const lineHeight=43;
         const firstY=cy-(words.length-1)*lineHeight/2;
         words.forEach((word,j)=>x.fillText(word,tx,firstY+j*lineHeight,198));
       });
@@ -267,12 +267,12 @@ document.getElementById('download').onclick=async()=>{
     x.font='400 27px Outfit, Arial, sans-serif';x.fillStyle='#514b43';
     x.fillText('www.modd-jewelry.ro',W/2,1785);
     const blob=await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('Imaginea nu a putut fi creată.')),'image/png'));
-    const file=new File([blob],'MODD-combinatia-ta-centrare-v4.png',{type:'image/png'});
+    const file=new File([blob],'MODD-combinatia-ta-final-v5.png',{type:'image/png'});
     if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
       try{await navigator.share({files:[file],title:'MODD — combinația mea',text:'Combinația mea MODD'});return;}catch(e){if(e.name==='AbortError')return;}
     }
     const url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download='MODD-combinatia-ta-centrare-v4.png';document.body.appendChild(a);a.click();a.remove();
+    a.href=url;a.download='MODD-combinatia-ta-final-v5.png';document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1500);
   }catch(e){
     console.error(e);alert(location.protocol==='file:' ? 'Browserul blochează exportul PNG când pagina este deschisă direct din fișierele calculatorului. Publică proiectul pe GitHub Pages sau rulează-l pe un server local pentru a salva/distribui imaginea.' : 'Nu am putut genera imaginea. Verifică dacă toate imaginile se încarcă și încearcă din nou.');
