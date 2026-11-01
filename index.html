@@ -170,10 +170,17 @@ function renderMobilePalette(){
   const b=document.createElement('button');b.type='button';b.className='mobile-swatch'+(c[0]==='0-default'?' default':'');
   b.style.setProperty('--swatch',c[2]);b.title=c[1];b.setAttribute('aria-label',c[1]);
   b.setAttribute('aria-pressed',String(state[side][i]===c[0]));
-  b.addEventListener('click',()=>{
+  b.addEventListener('click',event=>{
+   event.stopPropagation(); // Alegerea culorii nu închide selecția piesei.
    const picker=document.querySelectorAll('#'+side+'-controls .color-picker')[i];
    const img=document.querySelector('#'+side+'-ear img[data-layer="'+i+'"]');
-   setPicker(picker,side,i,c[0],img);renderMobilePalette();
+   setPicker(picker,side,i,c[0],img);
+   // Păstrăm explicit conturul și piesa activă după schimbarea culorii.
+   mobileSelection={side,i};
+   const overlay=overlays[side];
+   overlay.src='imagini/contururi/contur-'+outlineNames[i]+'.png';
+   overlay.classList.add('active');
+   renderMobilePalette();
   });mobileSwatches.appendChild(b);
  });
 }
@@ -195,7 +202,7 @@ function renderMobilePalette(){
 });
 document.addEventListener('click',event=>{
  if(!matchMedia('(max-width:800px)').matches || !mobileSelection)return;
- if(event.target.closest('.ear, .mobile-palette, .actions'))return;
+ if(event.target.closest('.ear, .mobile-palette, .mobile-swatch, .actions'))return;
  clearMobileSelection();
 });
 renderMobilePalette();
