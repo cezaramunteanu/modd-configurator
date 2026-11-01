@@ -222,18 +222,18 @@ document.getElementById('download').onclick=async()=>{
   const btn=document.getElementById('download'), original=btn.textContent;
   btn.disabled=true; btn.textContent='Se pregătește imaginea…';
   try{
-    if(document.fonts?.ready){await document.fonts.load('600 70px Quicksand');await document.fonts.load('500 20px Quicksand');await document.fonts.ready;}
+    if(document.fonts?.ready){await document.fonts.load('600 70px Quicksand');await document.fonts.load('400 43px Quicksand');await document.fonts.ready;}
     // Export vertical pentru telefon, fără contururile de selecție.
     const W=1080,H=1920,c=document.createElement('canvas');c.width=W;c.height=H;
     const x=c.getContext('2d');
     x.fillStyle='#f8f5ef';x.fillRect(0,0,W,H);
     // Titlu simplu, fără linii sau stele.
     x.textAlign='center';x.textBaseline='middle';
-    x.fillStyle='#59442e';x.font='600 70px Quicksand, Arial, sans-serif';
+    x.fillStyle='#59442e';x.font='600 48px Quicksand, Arial, sans-serif';
     x.fillText('Combinația ta',W/2,126);
 
     // Cerceii sunt redați din straturile reale, în culorile configurate.
-    const eh=1050,ew=eh*1738/5013,gap=24,top=350;
+    const eh=1260,ew=eh*1738/5013,gap=18,top=250;
     await drawEar(x,W/2-gap/2-ew,top,ew,eh,'left');
     await drawEar(x,W/2+gap/2,top,ew,eh,'right');
 
@@ -242,17 +242,17 @@ document.getElementById('download').onclick=async()=>{
     function drawColorNames(side){
       x.save();
       x.fillStyle='#3d3731';
-      x.font='600 30px Quicksand, Arial, sans-serif';
+      x.font='400 43px Quicksand, Arial, sans-serif';
       x.textBaseline='middle';
       x.textAlign='center';
-      const tx=side==='left'?92:W-92;
+      const tx=side==='left'?106:W-106;
       state[side].forEach((id,i)=>{
         const item=colors.find(v=>v[0]===id)||colors[0];
         const words=item[1].split(/\s+/);
         const cy=top+(pieceCenters[i]/5013)*eh;
-        const lineHeight=36;
+        const lineHeight=49;
         const firstY=cy-(words.length-1)*lineHeight/2;
-        words.forEach((word,j)=>x.fillText(word,tx,firstY+j*lineHeight,172));
+        words.forEach((word,j)=>x.fillText(word,tx,firstY+j*lineHeight,198));
       });
       x.restore();
     }
@@ -262,17 +262,17 @@ document.getElementById('download').onclick=async()=>{
     // Logo-ul original din fișierele MODD, nu un logo redesenat.
     const logo=await load('imagini/logo.png');
     const logoW=245,logoH=logoW*logo.naturalHeight/logo.naturalWidth;
-    x.drawImage(logo,(W-logoW)/2,1740,logoW,logoH);
+    x.drawImage(logo,(W-logoW)/2,1660,logoW,logoH);
     x.textAlign='center';x.textBaseline='middle';
     x.font='400 27px Outfit, Arial, sans-serif';x.fillStyle='#514b43';
-    x.fillText('www.modd-jewelry.ro',W/2,1850);
+    x.fillText('www.modd-jewelry.ro',W/2,1785);
     const blob=await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('Imaginea nu a putut fi creată.')),'image/png'));
-    const file=new File([blob],'MODD-combinatia-ta-text-mare-v3.png',{type:'image/png'});
+    const file=new File([blob],'MODD-combinatia-ta-centrare-v4.png',{type:'image/png'});
     if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
       try{await navigator.share({files:[file],title:'MODD — combinația mea',text:'Combinația mea MODD'});return;}catch(e){if(e.name==='AbortError')return;}
     }
     const url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download='MODD-combinatia-ta-text-mare-v3.png';document.body.appendChild(a);a.click();a.remove();
+    a.href=url;a.download='MODD-combinatia-ta-centrare-v4.png';document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1500);
   }catch(e){
     console.error(e);alert(location.protocol==='file:' ? 'Browserul blochează exportul PNG când pagina este deschisă direct din fișierele calculatorului. Publică proiectul pe GitHub Pages sau rulează-l pe un server local pentru a salva/distribui imaginea.' : 'Nu am putut genera imaginea. Verifică dacă toate imaginile se încarcă și încearcă din nou.');
