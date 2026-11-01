@@ -58,6 +58,9 @@
  .welcome{margin-bottom:8px}
  .layout{grid-template-columns:minmax(205px,300px) minmax(0,1fr) minmax(205px,300px);gap:12px;align-items:center}
  .side{align-self:center;min-width:0}
+ /* Panourile sunt deplasate cu 200px spre cercei, fără schimbarea mobilului. */
+ .side.left .desktop-panel{transform:translateX(200px);position:relative;z-index:2}
+ .side.right .desktop-panel{transform:translateX(-200px);position:relative;z-index:2}
  .side h2{display:none}
  .side .controls{display:none}
  .preview{height:var(--ear-h);padding-top:0;gap:12px;align-items:center}
@@ -312,6 +315,10 @@ function updateDesktopOverlay(side){
  document.getElementById(side+'-ear').addEventListener('click',ev=>{
   if(!desktopActive())return;
   const i=pickLayer(ev.currentTarget,ev);
+  // O singură piesă selectată în întregul configurator.
+  const other=side==='left'?'right':'left';
+  desktopSelection[other]=null;
+  updateDesktopOverlay(other);refreshDesktopPanel(other);
   desktopSelection[side]=i;
   updateDesktopOverlay(side);refreshDesktopPanel(side);
  });
