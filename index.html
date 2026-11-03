@@ -124,7 +124,7 @@
 </main>
 <script>
 const elements=[['element1-baza','Bază'],['element2-picatura','Picătură'],['element3-sfera-alungita','Sferă alungită'],['element4-umbrela','Umbrelă'],['element5-sfera-aplatizata','Sferă aplatizată']];
-const colors=[['0-default','Alege culoarea','#d8d5cf'],['army-green','Army Green','#67692E'],['charcoal-black','Charcoal Black','#1A1A1A'],['cotton-white','Cotton White','#FFFFFF'],['lemon-cream','Lemon Cream','#F4F090'],['mauve','Mauve','#E9C9E6'],['mystic-brown','Mystic Brown','#623532'],['pastel-blue','Pastel Blue','#7F9CD6'],['pastel-green','Electric Green','#B8E667'],['purple','Purple','#930575']];
+const colors=[['0-default','Alege culoarea','#d8d5cf'],['army-green','Army Green','#404C1C'],['charcoal-black','Charcoal Black','#1A1A1A'],['cotton-white','Cotton White','#FFFFFF'],['lemon-cream','Lemon Cream','#F4F090'],['mauve','Mauve','#E9C9E6'],['mystic-brown','Mystic Brown','#623532'],['pastel-blue','Pastel Blue','#7F9CD6'],['pastel-green','Electric Green','#B8E667'],['purple','Purple','#930575']];
 const state={left:Array(5).fill('0-default'),right:Array(5).fill('0-default')};
 function path(i,c){return `imagini/elemente/${elements[i][0]}/${c}.webp`}
 function closePickers(except){document.querySelectorAll('.color-picker.open').forEach(p=>{if(p!==except){p.classList.remove('open');p.querySelector('.color-trigger').setAttribute('aria-expanded','false')}})}
