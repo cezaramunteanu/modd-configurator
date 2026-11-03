@@ -367,67 +367,72 @@ document.getElementById('download').onclick=async()=>{
   const btn=document.getElementById('download'), original=btn.textContent;
   btn.disabled=true; btn.textContent='Se pregătește imaginea…';
   try{
-    if(document.fonts?.ready){await document.fonts.load('600 70px Quicksand');await document.fonts.load('400 31px Quicksand');await document.fonts.load('500 30px Quicksand');await document.fonts.ready;}
+    if(document.fonts?.ready){await document.fonts.load('600 70px Quicksand');await document.fonts.load('400 31px Quicksand');await document.fonts.load('500 30px Quicksand');await document.fonts.load('700 46px Quicksand');await document.fonts.ready;}
     // Export vertical pentru telefon, fără contururile de selecție.
     const W=1080,H=1920,c=document.createElement('canvas');c.width=W;c.height=H;
     const x=c.getContext('2d');
     x.fillStyle='#f8f5ef';x.fillRect(0,0,W,H);
-    // Titlu simplu, fără linii sau stele.
-    x.textAlign='center';x.textBaseline='middle';
-    x.fillStyle='#59442e';x.font='600 48px Quicksand, Arial, sans-serif';
-    x.fillText('Combinația ta',W/2,126);
+    // Mesajul de sus: fără logo, două rânduri.
+    x.textAlign='center';x.textBaseline='middle';x.fillStyle='#24221f';
+    x.font='500 37px Quicksand, Arial, sans-serif';
+    x.fillText('So cool! O combinație plină de personalitate.',W/2,108,W-80);
+    x.font='700 46px Quicksand, Arial, sans-serif';
+    x.fillText('WELCOME TO THE GANG!',W/2,169,W-80);
 
-    // Cerceii sunt redați din straturile reale, în culorile configurate.
-    const eh=1360,ew=eh*1738/5013,gap=-80,top=190;
+    // Cerceii reali, în culorile configurate; fără contururi în export.
+    const eh=1190,ew=eh*1738/5013,gap=-80,top=276;
     await drawEar(x,W/2-gap/2-ew,top,ew,eh,'left');
     await drawEar(x,W/2+gap/2,top,ew,eh,'right');
 
-    // Etichete 85%, centrate pe mijlocul fiecărei piese, inclusiv pentru două rânduri.
+    // Numele culorilor: gri discret, font mic, fără bold, un singur rând.
+    // Stânga: aliniere la stânga; dreapta: aliniere la dreapta.
+    // Centrul textului coincide cu centrul vertical al fiecărei piese.
     const pieceCenters=[(637+991)/2,(992+2567)/2,(2568+3618)/2,(3619+4145)/2,(4144+4672)/2];
     function drawColorNames(side){
       x.save();
-      x.fillStyle='#3d3731';
-      x.font='400 31px Quicksand, Arial, sans-serif';
+      x.fillStyle='#9f9f9f';
+      x.font='400 26px Quicksand, Arial, sans-serif';
       x.textBaseline='middle';
-      x.textAlign='center';
-      const tx=side==='left'?106:W-106;
+      x.textAlign=side==='left'?'left':'right';
+      const tx=side==='left'?55:W-55;
       state[side].forEach((id,i)=>{
         const item=colors.find(v=>v[0]===id)||colors[0];
-        const words=item[1].split(/\s+/);
         const cy=top+(pieceCenters[i]/5013)*eh;
-        const lineHeight=37;
-        const firstY=cy-(words.length-1)*lineHeight/2;
-        words.forEach((word,j)=>x.fillText(word,tx,firstY+j*lineHeight,198));
+        x.fillText(item[1],tx,cy,205);
       });
       x.restore();
     }
     drawColorNames('left');
     drawColorNames('right');
 
-    // Logo-ul original din fișierele MODD, nu un logo redesenat.
+    // Invitație în două rânduri, deasupra logo-ului.
+    x.textAlign='center';x.textBaseline='middle';x.fillStyle='#24221f';
+    x.font='400 30px Quicksand, Arial, sans-serif';
+    x.fillText('Want to wear your creation? Trimite-ne poza',W/2,1545,W-85);
+    x.fillText('și hai să o transformăm în realitate.',W/2,1587,W-85);
+
+    // Logo-ul original MODD doar jos, cu slogan de aceeași lățime.
     const logo=await load('imagini/logo.png');
     const logoW=245,logoH=logoW*logo.naturalHeight/logo.naturalWidth;
-    const logoY=1620;
+    const logoY=1680;
     x.drawImage(logo,(W-logoW)/2,logoY,logoW,logoH);
-    // Sloganul este dimensionat exact la lățimea logo-ului.
     const slogan='wear it your way';
     x.fillStyle='#24221f';x.textAlign='center';x.textBaseline='alphabetic';
     let sloganSize=30;
     for(let j=0;j<8;j++){
       x.font=`500 ${sloganSize}px Quicksand, Arial, sans-serif`;
-      const measured=x.measureText(slogan).width;
-      sloganSize*=logoW/measured;
+      sloganSize*=logoW/x.measureText(slogan).width;
     }
     x.font=`500 ${sloganSize}px Quicksand, Arial, sans-serif`;
-    const sloganTop=logoY+logoH+sloganSize/2; // spațiu = jumătate din înălțimea textului
+    const sloganTop=logoY+logoH+sloganSize/2;
     x.fillText(slogan,W/2,sloganTop+sloganSize,logoW);
     const blob=await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('Imaginea nu a putut fi creată.')),'image/png'));
-    const file=new File([blob],'MODD-combinatia-ta-varianta-L.png',{type:'image/png'});
+    const file=new File([blob],'MODD-creatia-ta.png',{type:'image/png'});
     if(!desktopActive() && navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
       try{await navigator.share({files:[file],title:'MODD — combinația mea',text:'Combinația mea MODD'});return;}catch(e){if(e.name==='AbortError')return;}
     }
     const url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download='MODD-combinatia-ta-varianta-L.png';document.body.appendChild(a);a.click();a.remove();
+    a.href=url;a.download='MODD-creatia-ta.png';document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1500);
   }catch(e){
     console.error(e);alert(location.protocol==='file:' ? 'Browserul blochează exportul PNG când pagina este deschisă direct din fișierele calculatorului. Publică proiectul pe GitHub Pages sau rulează-l pe un server local pentru a salva/distribui imaginea.' : 'Nu am putut genera imaginea. Verifică dacă toate imaginile se încarcă și încearcă din nou.');
