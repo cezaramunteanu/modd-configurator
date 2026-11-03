@@ -87,9 +87,27 @@
  .wear-message{margin-top:10px}
 }
 @media(min-width:801px) and (max-height:740px){:root{--ear-h:min(73vh,720px)}.desktop-panel{padding:15px}}
+
+/* Spațiere logo + mesaj în două rânduri, centrate, cu mărimea originală */
+.brand .welcome{display:flex;flex-direction:column;align-items:center;text-align:center}
+.brand .welcome span{display:block}
+@media(min-width:801px){
+ .brand img{margin-bottom:14px}
+ .brand .welcome{font-size:16px;line-height:1.35;margin-bottom:12px}
+ :root{--ear-h:min(73vh,810px)}
+}
+@media(max-width:800px){
+ .brand img{margin-bottom:9px}
+ .brand .welcome{font-size:11px;line-height:1.25;margin-bottom:9px}
+ .preview{padding-top:5px}
+}
+@media(max-width:800px) and (max-height:630px){
+ .brand img{margin-bottom:5px}
+ .brand .welcome{font-size:10px;margin-bottom:4px}
+}
 </style></head>
 <body><main class="page">
-<header class="brand"><img src="imagini/logo.png" alt="MODD"><p class="welcome">Hello! Alege combinația de culori dorită și poartă-i în ce modd vrei!</p></header>
+<header class="brand"><img src="imagini/logo.png" alt="MODD"><p class="welcome"><span>Hello! Alege combinația de culori dorită</span><span>și poartă-i în ce modd vrei!</span></p></header>
 <section class="layout">
 <div class="side left"><h2>CERCEL STÂNG</h2><div class="controls" id="left-controls"></div><div class="desktop-panel empty" id="left-panel"></div></div>
 <div class="preview">
@@ -349,7 +367,7 @@ document.getElementById('download').onclick=async()=>{
   const btn=document.getElementById('download'), original=btn.textContent;
   btn.disabled=true; btn.textContent='Se pregătește imaginea…';
   try{
-    if(document.fonts?.ready){await document.fonts.load('600 70px Quicksand');await document.fonts.load('400 31px Quicksand');await document.fonts.ready;}
+    if(document.fonts?.ready){await document.fonts.load('600 70px Quicksand');await document.fonts.load('400 31px Quicksand');await document.fonts.load('500 30px Quicksand');await document.fonts.ready;}
     // Export vertical pentru telefon, fără contururile de selecție.
     const W=1080,H=1920,c=document.createElement('canvas');c.width=W;c.height=H;
     const x=c.getContext('2d');
@@ -389,10 +407,20 @@ document.getElementById('download').onclick=async()=>{
     // Logo-ul original din fișierele MODD, nu un logo redesenat.
     const logo=await load('imagini/logo.png');
     const logoW=245,logoH=logoW*logo.naturalHeight/logo.naturalWidth;
-    x.drawImage(logo,(W-logoW)/2,1620,logoW,logoH);
-    x.textAlign='center';x.textBaseline='middle';
-    x.font='400 27px Outfit, Arial, sans-serif';x.fillStyle='#514b43';
-    x.fillText('www.modd-jewelry.ro',W/2,1750);
+    const logoY=1620;
+    x.drawImage(logo,(W-logoW)/2,logoY,logoW,logoH);
+    // Sloganul este dimensionat exact la lățimea logo-ului.
+    const slogan='wear it your way';
+    x.fillStyle='#24221f';x.textAlign='center';x.textBaseline='alphabetic';
+    let sloganSize=30;
+    for(let j=0;j<8;j++){
+      x.font=`500 ${sloganSize}px Quicksand, Arial, sans-serif`;
+      const measured=x.measureText(slogan).width;
+      sloganSize*=logoW/measured;
+    }
+    x.font=`500 ${sloganSize}px Quicksand, Arial, sans-serif`;
+    const sloganTop=logoY+logoH+sloganSize/2; // spațiu = jumătate din înălțimea textului
+    x.fillText(slogan,W/2,sloganTop+sloganSize,logoW);
     const blob=await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('Imaginea nu a putut fi creată.')),'image/png'));
     const file=new File([blob],'MODD-combinatia-ta-varianta-L.png',{type:'image/png'});
     if(!desktopActive() && navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
