@@ -105,6 +105,8 @@
  .brand img{margin-bottom:5px}
  .brand .welcome{font-size:10px;margin-bottom:4px}
 }
+
+@media(max-width:800px){.mobile-palette .palette-hint{font-family:Quicksand,sans-serif;font-weight:500;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
 </style></head>
 <body><main class="page">
 <header class="brand"><img src="imagini/logo.png" alt="MODD"><p class="welcome"><span>Hello! Alege combinația de culori dorită</span><span>și poartă-i în ce modd vrei!</span></p></header>
@@ -222,7 +224,7 @@ function renderMobilePalette(){
  if(!mobileSelection){mobileTitle.textContent='Atinge o piesă a cercelului';mobileHint.textContent='Alege direct piesa pe care vrei să o colorezi';return;}
  const {side,i}=mobileSelection;
  mobileTitle.textContent=elements[i][1]+' · cercel '+(side==='left'?'stâng':'drept');
- mobileHint.textContent='Atinge o altă piesă pentru a continua';
+ mobileHint.textContent='Alege o culoare'+(state[side][i]==='0-default'?'':' : '+(colors.find(c=>c[0]===state[side][i])||colors[0])[1]);
  colors.forEach(c=>{
   const b=document.createElement('button');b.type='button';b.className='mobile-swatch'+(c[0]==='0-default'?' default':'');
   b.style.setProperty('--swatch',c[2]);b.title=c[1];b.setAttribute('aria-label',c[1]);
@@ -292,7 +294,7 @@ function refreshDesktopPanel(side){
  const sub=document.createElement('div');sub.className='panel-sub';sub.textContent='Cercel '+(side==='left'?'stâng':'drept');
  desc.append(name,sub);piece.append(thumb,desc);
  const rule=document.createElement('div');rule.className='panel-rule';
- const instruction=document.createElement('p');instruction.className='panel-instruction';instruction.textContent='Alege o culoare';
+ const instruction=document.createElement('p');instruction.className='panel-instruction';instruction.textContent='Alege o culoare'+(state[side][i]==='0-default'?'':' : '+(colors.find(c=>c[0]===state[side][i])||colors[0])[1]);
  const swatches=document.createElement('div');swatches.className='desktop-swatches';
  colors.forEach(c=>{
   const b=document.createElement('button');b.type='button';b.className='desktop-swatch'+(c[0]==='0-default'?' default':'');
@@ -375,7 +377,7 @@ document.getElementById('download').onclick=async()=>{
     // Mesajul de sus: fără logo, două rânduri.
     x.textAlign='center';x.textBaseline='middle';x.fillStyle='#24221f';
     x.font='500 37px Quicksand, Arial, sans-serif';
-    x.fillText('So cool! O combinație plină de personalitate.',W/2,108,W-80);
+    x.fillText('Nice combo! O alegere plină de personalitate',W/2,108,W-80);
     x.font='700 46px Quicksand, Arial, sans-serif';
     x.fillText('WELCOME TO THE GANG!',W/2,169,W-80);
 
@@ -384,48 +386,17 @@ document.getElementById('download').onclick=async()=>{
     await drawEar(x,W/2-gap/2-ew,top,ew,eh,'left');
     await drawEar(x,W/2+gap/2,top,ew,eh,'right');
 
-    // Numele culorilor: gri discret, font mic, fără bold, un singur rând.
-    // Stânga: aliniere la stânga; dreapta: aliniere la dreapta.
-    // Centrul textului coincide cu centrul vertical al fiecărei piese.
-    const pieceCenters=[(637+991)/2,(992+2567)/2,(2568+3618)/2,(3619+4145)/2,(4144+4672)/2];
-    function drawColorNames(side){
-      x.save();
-      x.fillStyle='#9f9f9f';
-      x.font='400 26px Quicksand, Arial, sans-serif';
-      x.textBaseline='middle';
-      x.textAlign=side==='left'?'left':'right';
-      const tx=side==='left'?55:W-55;
-      state[side].forEach((id,i)=>{
-        const item=colors.find(v=>v[0]===id)||colors[0];
-        const cy=top+(pieceCenters[i]/5013)*eh;
-        x.fillText(item[1],tx,cy,205);
-      });
-      x.restore();
-    }
-    drawColorNames('left');
-    drawColorNames('right');
-
     // Invitație în două rânduri, deasupra logo-ului.
     x.textAlign='center';x.textBaseline='middle';x.fillStyle='#24221f';
-    x.font='400 30px Quicksand, Arial, sans-serif';
+    x.font='500 37px Quicksand, Arial, sans-serif';
     x.fillText('Want to wear your creation? Trimite-ne poza',W/2,1545,W-85);
     x.fillText('și hai să o transformăm în realitate.',W/2,1587,W-85);
 
-    // Logo-ul original MODD doar jos, cu slogan de aceeași lățime.
+    // Logo-ul original MODD, fără slogan dedesubt.
     const logo=await load('imagini/logo.png');
     const logoW=245,logoH=logoW*logo.naturalHeight/logo.naturalWidth;
     const logoY=1680;
     x.drawImage(logo,(W-logoW)/2,logoY,logoW,logoH);
-    const slogan='wear it your way';
-    x.fillStyle='#24221f';x.textAlign='center';x.textBaseline='alphabetic';
-    let sloganSize=30;
-    for(let j=0;j<8;j++){
-      x.font=`500 ${sloganSize}px Quicksand, Arial, sans-serif`;
-      sloganSize*=logoW/x.measureText(slogan).width;
-    }
-    x.font=`500 ${sloganSize}px Quicksand, Arial, sans-serif`;
-    const sloganTop=logoY+logoH+sloganSize/2;
-    x.fillText(slogan,W/2,sloganTop+sloganSize,logoW);
     const blob=await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('Imaginea nu a putut fi creată.')),'image/png'));
     const file=new File([blob],'MODD-creatia-ta.png',{type:'image/png'});
     if(!desktopActive() && navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
