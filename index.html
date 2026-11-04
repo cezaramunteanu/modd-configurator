@@ -395,7 +395,10 @@ document.getElementById('download').onclick=async()=>{
     // Logo-ul original MODD, fără slogan dedesubt.
     const logo=await load('imagini/logo.png');
     const logoW=245,logoH=logoW*logo.naturalHeight/logo.naturalWidth;
-    const logoY=1680;
+    // Marginea de jos a logo-ului este egală cu marginea de sus a primului text.
+    // Primul text începe vizual la ~88 px; logo-ul are ~70 px înălțime.
+    const topMargin=88;
+    const logoY=H-topMargin-logoH;
     x.drawImage(logo,(W-logoW)/2,logoY,logoW,logoH);
     const blob=await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('Imaginea nu a putut fi creată.')),'image/png'));
     const file=new File([blob],'MODD-creatia-ta.png',{type:'image/png'});
