@@ -107,8 +107,17 @@
 }
 
 @media(max-width:800px){.mobile-palette .palette-hint{font-family:Quicksand,sans-serif;font-weight:500;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+
+/* Selector discret RO / EN, pe desktop și pe telefon. */
+.page{position:relative}
+.lang-switch{position:absolute;top:10px;right:18px;z-index:90;display:flex;gap:2px;padding:3px;background:#f0ebe3;border:1px solid #e1dcd3;border-radius:30px}
+.lang-switch button{border:0;border-radius:25px;background:transparent;color:#6b665e;padding:5px 9px;font:600 12px Quicksand,sans-serif;cursor:pointer;line-height:1.15}
+.lang-switch button[aria-pressed="true"]{background:#fffdf9;color:#24221f;box-shadow:0 1px 4px rgba(40,35,25,.11)}
+.lang-switch button:focus-visible{outline:2px solid #6c5842;outline-offset:2px}
+@media(max-width:800px){.lang-switch{top:8px;right:7px;padding:2px}.lang-switch button{padding:4px 6px;font-size:10px}}
 </style></head>
 <body><main class="page">
+<nav class="lang-switch" aria-label="Selectează limba / Choose language"><button type="button" data-lang="ro" aria-pressed="true">RO</button><button type="button" data-lang="en" aria-pressed="false">EN</button></nav>
 <header class="brand"><img src="imagini/logo.png" alt="MODD"><p class="welcome"><span>Hello! Alege combinația de culori dorită</span><span>și poartă-i în ce modd vrei!</span></p></header>
 <section class="layout">
 <div class="side left"><h2>CERCEL STÂNG</h2><div class="controls" id="left-controls"></div><div class="desktop-panel empty" id="left-panel"></div></div>
@@ -126,13 +135,59 @@
 const elements=[['element1-baza','Bază'],['element2-picatura','Picătură'],['element3-sfera-alungita','Sferă alungită'],['element4-umbrela','Umbrelă'],['element5-sfera-aplatizata','Sferă aplatizată']];
 const colors=[['0-default','Alege culoarea','#d8d5cf'],['army-green','Army Green','#404C1C'],['charcoal-black','Charcoal Black','#1A1A1A'],['cotton-white','Cotton White','#FFFFFF'],['lemon-cream','Lemon Cream','#F4F090'],['mauve','Mauve','#E9C9E6'],['mystic-brown','Mystic Brown','#623532'],['pastel-blue','Pastel Blue','#7F9CD6'],['pastel-green','Electric Green','#B8E667'],['purple','Purple','#930575']];
 const state={left:Array(5).fill('0-default'),right:Array(5).fill('0-default')};
+// Textele sunt alese după limba activă inclusiv pentru imaginea PNG exportată.
+const translations={
+ ro:{
+  welcome1:'Hello! Alege combinația de culori dorită',
+  welcome2:'și poartă-i în ce modd vrei!',
+  leftEar:'Cercel stâng',rightEar:'Cercel drept',leftSide:'stâng',rightSide:'drept',
+  chooseColor:'Alege culoarea',selectColor:'Alege o culoare',
+  reset:'Resetează ambii cercei',save:'Salvează imaginea',saveShare:'Salvează / distribuie imaginea',
+  mobileTap:'Atinge o piesă a cercelului',mobileInstruction:'Alege direct piesa pe care vrei să o colorezi',
+  selectedPiece:'Piesa selectată',tapPart:'Apasă pe o piesă a cercelului pentru a-i alege culoarea.',
+  close:'Închide selecția',selectedAlt:'Piesa selectată în culoarea aleasă',
+  wearDescription:'Joacă-te cu elementele și creează look-uri care te reprezintă.',
+  prepare:'Se pregătește imaginea…',
+  exportTop:'Nice combo! O alegere plină de personalitate.',
+  exportBottom1:'Want to wear your creation? Trimite-ne poza',
+  exportBottom2:'și hai să o transformăm în realitate.',
+  shareTitle:'MODD — combinația mea',shareText:'Combinația mea MODD',
+  errorFile:'Browserul blochează exportul PNG când pagina este deschisă direct din fișierele calculatorului. Publică proiectul pe GitHub Pages sau rulează-l pe un server local pentru a salva/distribui imaginea.',
+  errorExport:'Nu am putut genera imaginea. Verifică dacă toate imaginile se încarcă și încearcă din nou.'
+ },
+ en:{
+  welcome1:'Hello! Choose your favorite color combination',
+  welcome2:'and wear them as you wish!',
+  leftEar:'Left earring',rightEar:'Right earring',leftSide:'left',rightSide:'right',
+  chooseColor:'Choose color',selectColor:'Choose a color',
+  reset:'Reset both earrings',save:'Download image',saveShare:'Save / share image',
+  mobileTap:'Tap an earring piece',mobileInstruction:'Tap a piece to choose its color',
+  selectedPiece:'Selected piece',tapPart:'Click an earring piece to choose its color.',
+  close:'Close selection',selectedAlt:'Selected piece in your chosen color',
+  wearDescription:'Play with the elements and create looks that feel like you.',
+  prepare:'Preparing your image…',
+  exportTop:'Nice combo! A choice full of personality.',
+  exportBottom1:'Want to wear your creation? Send us a photo',
+  exportBottom2:"and let's bring it to life.",
+  shareTitle:'MODD — my combination',shareText:'My MODD combination',
+  errorFile:'Your browser blocks PNG export when the page is opened directly as a local file. Publish it on GitHub Pages or run it on a local server.',
+  errorExport:'Could not create the image. Check that all images have loaded and try again.'
+ }
+};
+const elementEnglish=['Base','Teardrop','Elongated sphere','Umbrella','Flattened sphere'];
+let currentLang='ro';
+try{currentLang=localStorage.getItem('modd-language')==='en'?'en':'ro';}catch(e){}
+function t(key){return translations[currentLang][key]}
+function elementName(i){return currentLang==='en'?elementEnglish[i]:elements[i][1]}
+function colorName(id){return id==='0-default'?t('chooseColor'):(colors.find(c=>c[0]===id)||colors[0])[1]}
+
 function path(i,c){return `imagini/elemente/${elements[i][0]}/${c}.webp`}
 function closePickers(except){document.querySelectorAll('.color-picker.open').forEach(p=>{if(p!==except){p.classList.remove('open');p.querySelector('.color-trigger').setAttribute('aria-expanded','false')}})}
 function setPicker(picker,side,i,color,img){
   state[side][i]=color;const next=path(i,color); if(img.getAttribute('src')!==next) img.src=next;
   const data=colors.find(c=>c[0]===color)||colors[0];
   picker.querySelector('.color-trigger .color-dot').style.setProperty('--swatch',data[2]);
-  picker.querySelector('.color-trigger .color-name').textContent=data[1];
+  picker.querySelector('.color-trigger .color-name').textContent=colorName(color);
   picker.querySelectorAll('.color-option').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.value===color)));
   picker.classList.remove('open');picker.querySelector('.color-trigger').setAttribute('aria-expanded','false');
 }
@@ -141,15 +196,15 @@ function build(side){
  elements.forEach((e,i)=>{
   const img=document.createElement('img');img.decoding='async';img.loading='eager';img.fetchPriority='high';img.src=path(i,'0-default');img.dataset.layer=i;ear.appendChild(img);
   const f=document.createElement('div');f.className='field';
-  const label=document.createElement('label');label.textContent=e[1];f.appendChild(label);
+  const label=document.createElement('label');label.textContent=elementName(i);f.appendChild(label);
   const picker=document.createElement('div');picker.className='color-picker';
-  const trigger=document.createElement('button');trigger.type='button';trigger.className='color-trigger';trigger.setAttribute('aria-label',e[1]+': Alege culoarea');trigger.setAttribute('aria-haspopup','listbox');trigger.setAttribute('aria-expanded','false');
+  const trigger=document.createElement('button');trigger.type='button';trigger.className='color-trigger';trigger.setAttribute('aria-label',elementName(i)+': '+t('chooseColor'));trigger.setAttribute('aria-haspopup','listbox');trigger.setAttribute('aria-expanded','false');
   trigger.innerHTML='<span class="color-dot" style="--swatch:#d8d5cf"></span><span class="color-name">Alege culoarea</span><span class="chevron" aria-hidden="true">⌄</span>';
-  const menu=document.createElement('div');menu.className='color-menu';menu.setAttribute('role','listbox');menu.setAttribute('aria-label','Culori pentru '+e[1]);
+  const menu=document.createElement('div');menu.className='color-menu';menu.setAttribute('role','listbox');menu.setAttribute('aria-label',t('selectColor')+': '+elementName(i));
   colors.forEach(c=>{
     const opt=document.createElement('button');opt.type='button';opt.className='color-option';opt.dataset.value=c[0];opt.setAttribute('role','option');opt.setAttribute('aria-selected',String(c[0]==='0-default'));
     opt.innerHTML='<span class="color-dot"></span><span class="color-name"></span>';
-    opt.querySelector('.color-dot').style.setProperty('--swatch',c[2]);opt.querySelector('.color-name').textContent=c[1];
+    opt.querySelector('.color-dot').style.setProperty('--swatch',c[2]);opt.querySelector('.color-name').textContent=colorName(c[0]);
     opt.addEventListener('click',()=>setPicker(picker,side,i,c[0],img));menu.appendChild(opt);
   });
   trigger.addEventListener('click',()=>{const open=!picker.classList.contains('open');closePickers();picker.classList.toggle('open',open);trigger.setAttribute('aria-expanded',String(open));});
@@ -221,13 +276,13 @@ function pickLayer(ear,event){
 }
 function renderMobilePalette(){
  mobileSwatches.replaceChildren();
- if(!mobileSelection){mobileTitle.textContent='Atinge o piesă a cercelului';mobileHint.textContent='Alege direct piesa pe care vrei să o colorezi';return;}
+ if(!mobileSelection){mobileTitle.textContent=t('mobileTap');mobileHint.textContent=t('mobileInstruction');return;}
  const {side,i}=mobileSelection;
- mobileTitle.textContent=elements[i][1]+' · cercel '+(side==='left'?'stâng':'drept');
- mobileHint.textContent='Alege o culoare'+(state[side][i]==='0-default'?'':' : '+(colors.find(c=>c[0]===state[side][i])||colors[0])[1]);
+ mobileTitle.textContent=elementName(i)+' · '+t(side==='left'?'leftEar':'rightEar').toLowerCase();
+ mobileHint.textContent=t('selectColor')+(state[side][i]==='0-default'?'':' : '+colorName(state[side][i]));
  colors.forEach(c=>{
   const b=document.createElement('button');b.type='button';b.className='mobile-swatch'+(c[0]==='0-default'?' default':'');
-  b.style.setProperty('--swatch',c[2]);b.title=c[1];b.setAttribute('aria-label',c[1]);
+  b.style.setProperty('--swatch',c[2]);b.title=colorName(c[0]);b.setAttribute('aria-label',colorName(c[0]));
   b.setAttribute('aria-pressed',String(state[side][i]===c[0]));
   b.addEventListener('pointerdown',event=>event.stopPropagation());
   b.addEventListener('touchend',event=>event.stopPropagation(),{passive:true});
@@ -277,28 +332,28 @@ function refreshDesktopPanel(side){
  panel.replaceChildren();
  if(i===null){
   panel.className='desktop-panel empty';
-  const heading=document.createElement('div');heading.className='panel-heading';heading.textContent=side==='left'?'Cercel stâng':'Cercel drept';
-  const hint=document.createElement('div');hint.textContent='Apasă pe o piesă a cercelului pentru a-i alege culoarea.';
+  const heading=document.createElement('div');heading.className='panel-heading';heading.textContent=t(side==='left'?'leftEar':'rightEar');
+  const hint=document.createElement('div');hint.textContent=t('tapPart');
   panel.append(heading,hint);return;
  }
  panel.className='desktop-panel';
  const top=document.createElement('div');top.className='panel-top';
- const heading=document.createElement('span');heading.className='panel-heading';heading.textContent='Piesa selectată';
- const close=document.createElement('button');close.type='button';close.className='panel-close';close.textContent='×';close.setAttribute('aria-label','Închide selecția');
+ const heading=document.createElement('span');heading.className='panel-heading';heading.textContent=t('selectedPiece');
+ const close=document.createElement('button');close.type='button';close.className='panel-close';close.textContent='×';close.setAttribute('aria-label',t('close'));
  close.addEventListener('click',()=>{desktopSelection[side]=null;updateDesktopOverlay(side);refreshDesktopPanel(side)});
  top.append(heading,close);
  const piece=document.createElement('div');piece.className='panel-piece';
- const thumb=document.createElement('img');thumb.className='panel-thumb';thumb.alt='Piesa selectată în culoarea aleasă';
+ const thumb=document.createElement('img');thumb.className='panel-thumb';thumb.alt=t('selectedAlt');
  const desc=document.createElement('div');
- const name=document.createElement('div');name.className='panel-name';name.textContent=elements[i][1];
- const sub=document.createElement('div');sub.className='panel-sub';sub.textContent='Cercel '+(side==='left'?'stâng':'drept');
+ const name=document.createElement('div');name.className='panel-name';name.textContent=elementName(i);
+ const sub=document.createElement('div');sub.className='panel-sub';sub.textContent=t(side==='left'?'leftEar':'rightEar');
  desc.append(name,sub);piece.append(thumb,desc);
  const rule=document.createElement('div');rule.className='panel-rule';
- const instruction=document.createElement('p');instruction.className='panel-instruction';instruction.textContent='Alege o culoare'+(state[side][i]==='0-default'?'':' : '+(colors.find(c=>c[0]===state[side][i])||colors[0])[1]);
+ const instruction=document.createElement('p');instruction.className='panel-instruction';instruction.textContent=t('selectColor')+(state[side][i]==='0-default'?'':' : '+colorName(state[side][i]));
  const swatches=document.createElement('div');swatches.className='desktop-swatches';
  colors.forEach(c=>{
   const b=document.createElement('button');b.type='button';b.className='desktop-swatch'+(c[0]==='0-default'?' default':'');
-  b.style.setProperty('--swatch',c[2]);b.title=c[1];b.setAttribute('aria-label',c[1]);b.setAttribute('aria-pressed',String(state[side][i]===c[0]));
+  b.style.setProperty('--swatch',c[2]);b.title=colorName(c[0]);b.setAttribute('aria-label',colorName(c[0]));b.setAttribute('aria-pressed',String(state[side][i]===c[0]));
   b.addEventListener('click',event=>{
    event.stopPropagation();
    const picker=document.querySelectorAll('#'+side+'-controls .color-picker')[i];
@@ -345,17 +400,49 @@ function updateDesktopOverlay(side){
  refreshDesktopPanel(side);
 });
 document.addEventListener('click',ev=>{
- if(!desktopActive()||ev.target.closest('.ear,.desktop-panel,.actions'))return;
+ if(!desktopActive()||ev.target.closest('.ear,.desktop-panel,.actions,.lang-switch'))return;
  ['left','right'].forEach(side=>{if(desktopSelection[side]!==null){desktopSelection[side]=null;updateDesktopOverlay(side);refreshDesktopPanel(side)}});
 });
 document.getElementById('reset').addEventListener('click',()=>{
  ['left','right'].forEach(side=>{desktopSelection[side]=null;updateDesktopOverlay(side);refreshDesktopPanel(side)});
 });
 function updateDownloadLabel(){
- document.getElementById('download').textContent=desktopActive()?'Salvează imaginea':'Salvează / distribuie imaginea';
+ document.getElementById('download').textContent=desktopActive()?t('save'):t('saveShare');
 }
 updateDownloadLabel();
 window.addEventListener('resize',updateDownloadLabel);
+function applyLanguage(lang){
+ currentLang=lang==='en'?'en':'ro';
+ document.documentElement.lang=currentLang;
+ document.title=currentLang==='en'?'MODD — Earring Configurator':'MODD — Configurator cercei';
+ try{localStorage.setItem('modd-language',currentLang)}catch(e){}
+ document.querySelectorAll('.lang-switch button').forEach(btn=>btn.setAttribute('aria-pressed',String(btn.dataset.lang===currentLang)));
+ const welcome=document.querySelectorAll('.welcome span');
+ welcome[0].textContent=t('welcome1');welcome[1].textContent=t('welcome2');
+ document.getElementById('reset').textContent=t('reset');
+ document.querySelector('.side.left h2').textContent=t('leftEar').toUpperCase();
+ document.querySelector('.side.right h2').textContent=t('rightEar').toUpperCase();
+ document.querySelector('.wear-message p').textContent=t('wearDescription');
+ document.getElementById('mobile-palette').setAttribute('aria-label',t('selectColor'));
+ ['left','right'].forEach(side=>{
+  document.querySelectorAll('#'+side+'-controls .field').forEach((field,i)=>{
+   field.querySelector('label').textContent=elementName(i);
+   const picker=field.querySelector('.color-picker');
+   picker.querySelector('.color-trigger').setAttribute('aria-label',elementName(i)+': '+t('chooseColor'));
+   picker.querySelector('.color-trigger .color-name').textContent=colorName(state[side][i]);
+   picker.querySelector('.color-menu').setAttribute('aria-label',t('selectColor')+': '+elementName(i));
+   picker.querySelectorAll('.color-option').forEach(option=>{
+    option.querySelector('.color-name').textContent=colorName(option.dataset.value);
+   });
+  });
+  refreshDesktopPanel(side);
+ });
+ renderMobilePalette();
+ updateDownloadLabel();
+}
+document.querySelectorAll('.lang-switch button').forEach(btn=>btn.addEventListener('click',()=>applyLanguage(btn.dataset.lang)));
+applyLanguage(currentLang);
+
 
 const imageCache=new Map();
 function load(src){
@@ -366,8 +453,8 @@ function load(src){
 async function drawEar(ctx,x,y,w,h,side){const sources=['imagini/umbra.webp?v=20261101-v6',`imagini/cheite/${side==='left'?'stang':'drept'}.webp`,...state[side].map((c,i)=>path(i,c))];
  const images=await Promise.all(sources.map(load));images.forEach(im=>ctx.drawImage(im,x,y,w,h));}
 document.getElementById('download').onclick=async()=>{
-  const btn=document.getElementById('download'), original=btn.textContent;
-  btn.disabled=true; btn.textContent='Se pregătește imaginea…';
+  const btn=document.getElementById('download'), exportLang=currentLang, strings=translations[exportLang];
+  btn.disabled=true; btn.textContent=strings.prepare;
   try{
     if(document.fonts?.ready){await document.fonts.load('600 70px Quicksand');await document.fonts.load('400 31px Quicksand');await document.fonts.load('500 30px Quicksand');await document.fonts.load('700 46px Quicksand');await document.fonts.ready;}
     // Export vertical pentru telefon, fără contururile de selecție.
@@ -377,7 +464,7 @@ document.getElementById('download').onclick=async()=>{
     // Mesajul de sus: fără logo, două rânduri.
     x.textAlign='center';x.textBaseline='middle';x.fillStyle='#24221f';
     x.font='500 37px Quicksand, Arial, sans-serif';
-    x.fillText('Nice combo! O alegere plină de personalitate.',W/2,108,W-80);
+    x.fillText(strings.exportTop,W/2,108,W-80);
     x.font='700 46px Quicksand, Arial, sans-serif';
     x.fillText('WELCOME TO THE GANG!',W/2,169,W-80);
 
@@ -389,8 +476,8 @@ document.getElementById('download').onclick=async()=>{
     // Invitație în două rânduri, deasupra logo-ului.
     x.textAlign='center';x.textBaseline='middle';x.fillStyle='#24221f';
     x.font='500 37px Quicksand, Arial, sans-serif';
-    x.fillText('Want to wear your creation? Trimite-ne poza',W/2,1545,W-85);
-    x.fillText('și hai să o transformăm în realitate.',W/2,1587,W-85);
+    x.fillText(strings.exportBottom1,W/2,1545,W-85);
+    x.fillText(strings.exportBottom2,W/2,1587,W-85);
 
     // Logo-ul original MODD, fără slogan dedesubt.
     const logo=await load('imagini/logo.png');
@@ -401,15 +488,15 @@ document.getElementById('download').onclick=async()=>{
     const logoY=H-topMargin-logoH;
     x.drawImage(logo,(W-logoW)/2,logoY,logoW,logoH);
     const blob=await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('Imaginea nu a putut fi creată.')),'image/png'));
-    const file=new File([blob],'MODD-creatia-ta.png',{type:'image/png'});
+    const file=new File([blob],`MODD-creatia-ta-${exportLang.toUpperCase()}.png`,{type:'image/png'});
     if(!desktopActive() && navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-      try{await navigator.share({files:[file],title:'MODD — combinația mea',text:'Combinația mea MODD'});return;}catch(e){if(e.name==='AbortError')return;}
+      try{await navigator.share({files:[file],title:strings.shareTitle,text:strings.shareText});return;}catch(e){if(e.name==='AbortError')return;}
     }
     const url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download='MODD-creatia-ta.png';document.body.appendChild(a);a.click();a.remove();
+    a.href=url;a.download=`MODD-creatia-ta-${exportLang.toUpperCase()}.png`;document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1500);
   }catch(e){
-    console.error(e);alert(location.protocol==='file:' ? 'Browserul blochează exportul PNG când pagina este deschisă direct din fișierele calculatorului. Publică proiectul pe GitHub Pages sau rulează-l pe un server local pentru a salva/distribui imaginea.' : 'Nu am putut genera imaginea. Verifică dacă toate imaginile se încarcă și încearcă din nou.');
-  }finally{btn.disabled=false;btn.textContent=original;}
+    console.error(e);alert(location.protocol==='file:' ? strings.errorFile : strings.errorExport);
+  }finally{btn.disabled=false;updateDownloadLabel();}
 };
 </script></body></html>
